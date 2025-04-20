@@ -14,11 +14,11 @@ import core.losses as losses
 def fit(args):
     # init face detection and lms detection models
     print('loading models')
-    mtcnn = MTCNN(device=args.device, select_largest=False)
+    mtcnn = MTCNN(select_largest=False)
     fa = face_alignment.FaceAlignment(
-        face_alignment.LandmarksType._3D, flip_input=False)
+        face_alignment.LandmarksType.THREE_D, device='cpu', flip_input=False)
     recon_model = get_recon_model(model=args.recon_model,
-                                  device=args.device,
+                                  device=torch.device('cpu'),
                                   batch_size=1,
                                   img_size=args.tar_size)
 
@@ -46,13 +46,13 @@ def fit(args):
 
     lms = fa.get_landmarks_from_image(resized_face_img)[0]
     lms = lms[:, :2][None, ...]
-    lms = torch.tensor(lms, dtype=torch.float32, device=args.device)
+    lms = torch.tensor(lms, dtype=torch.float32, device=torch.device('cpu'))
     img_tensor = torch.tensor(
-        resized_face_img[None, ...], dtype=torch.float32, device=args.device)
+        resized_face_img[None, ...], dtype=torch.float32, device=torch.device('cpu'))
 
     print('landmarks detected.')
 
-    lm_weights = utils.get_lm_weights(args.device)
+    lm_weights = utils.get_lm_weights(torch.device('cpu'))
     print('start rigid fitting')
     rigid_optimizer = torch.optim.Adam([recon_model.get_rot_tensor(),
                                         recon_model.get_trans_tensor()],
